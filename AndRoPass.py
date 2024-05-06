@@ -38,8 +38,10 @@ def main():
     
     if not apk_file.exist():
         cp.pr("red", "[ERROR] APK file not found.")
-
-    RequirementCheck().check()
+    cp.pr("info", "[INFO] Checking AndRoPass requirements")
+    requirement_check = RequirementCheck()
+    if not (requirement_check.check()):
+        sys.exit(0)
     
 
 
