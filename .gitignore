@@ -6,9 +6,6 @@ __pycache__/
 # C extensions
 *.so
 
-# JAR files
-*.jar
-
 # Distribution / packaging
 .Python
 build/
@@ -135,4 +132,4 @@ dmypy.json
 *.apk
 
 # Temp Dir
-tmp/
+utils/tmp/

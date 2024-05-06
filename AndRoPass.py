@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from utils.ColorPrint import ColorPrint as cp
 from utils.APKFile import APKFile
 from utils.RequirementCheck import RequirementCheck
-
+from utils.Compiler import Compiler
 
 DES = """
  █████╗ ███╗   ██╗██████╗ ██████╗  ██████╗ ██████╗  █████╗ ███████╗███████╗
@@ -42,6 +42,9 @@ def main():
     requirement_check = RequirementCheck()
     if not (requirement_check.check()):
         sys.exit(0)
+    
+    compiler = Compiler(requirement_check.apktool_path, apk_file_path)
+    decompile_out_with_resource , decompile_out_without_resource = compiler.decompile()
     
 
 

@@ -33,6 +33,7 @@ class RequirementCheck:
             return False
         else:
             cp.pr("info", "[INFO] Uber Apk Signer binary found")
+        return True
 
     
     def check_apktool(self):
@@ -44,7 +45,7 @@ class RequirementCheck:
                 cp.pr("error", f"[ERROR] Error making apktool directory: {e}")
         for file in os.listdir(self.apktool_dir):
             if file.endswith(".jar"):
-                self.apktool_path = os.path.join(self.base_path, file)
+                self.apktool_path = os.path.join(self.base_path,'tools','apktool', file)
                 res = True
         try:
             url = "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"
