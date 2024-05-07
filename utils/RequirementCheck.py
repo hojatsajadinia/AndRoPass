@@ -78,7 +78,7 @@ class RequirementCheck:
                 cp.pr("error", f"[ERROR] Error making uberApkSigner directory: {e}")
         for file in os.listdir(self.uber_apk_signer_dir):
             if file.endswith(".jar"):
-                self.uber_apk_signer_path = os.path.join(self.base_path, file)
+                self.uber_apk_signer_path = os.path.join(self.base_path,'tools','uberApkSigner', file)
                 res = True
         try:
             url = "https://api.github.com/repos/patrickfav/uber-apk-signer/releases/latest"

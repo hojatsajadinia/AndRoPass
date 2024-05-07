@@ -43,21 +43,22 @@ def main():
     if not (requirement_check.check()):
         sys.exit(0)
     
-    compiler = Compiler(requirement_check.apktool_path, apk_file_path)
+    compiler = Compiler(requirement_check.apktool_path, requirement_check.uber_apk_signer_path,apk_file_path)
     if not compiler.decompile():
         cp.pr("error", "[ERROR] Unable to decompile applicaiton")
     
+    #TODO Scan Phase
+
     if not compiler.compile():
         cp.pr("error", "[ERROR] Unable to compile applicaiton")
-
-    compiler
-
-
-
-
-
     
-
+    if not compiler.signer():
+        cp.pr("error", "[ERROR] Unable to sign applicaiton")
+    else:
+        if compiler.sign_out_path_with_resource:
+            cp.pr("blue", f"[DONE] Application Out Path: {compiler.sign_out_path_with_resource} ")
+        if compiler.sign_out_path_without_resource:
+            cp.pr("blue", f"[DONE] Application Out Path: {compiler.sign_out_path_without_resource} ")
 
 if __name__ == "__main__":
     main()

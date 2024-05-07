@@ -6,7 +6,7 @@ import os
 import sys
 
 class Compiler:
-    def __init__(self, apktool_path, apk_path) -> None:
+    def __init__(self, apktool_path, uber_apk_signer_path, apk_path) -> None:
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.apktool_path = apktool_path
         self.apk_path = apk_path
@@ -15,6 +15,9 @@ class Compiler:
         self.decompile_out_path_without_resource = str()
         self.compile_out_path_with_resource = str()
         self.compile_out_path_without_resource = str()
+        self.sign_out_path_with_resource = str()
+        self.sign_out_path_without_resource = str()
+        self.uber_apk_signer_path = uber_apk_signer_path
 
     def create_temp_dir(self):
         try:
@@ -95,9 +98,31 @@ class Compiler:
                 cp.pr("error", "[ERROR] Unable to decompile applicaiton")
                 sys.exit(1)
             else:
+                if not compile_with_res_status:
+                    self.compile_out_path_with_resource = str()
+                if not compile_without_res_status:
+                    self.compile_out_path_without_resource = str()
+                
                 return True
             
+    def signer(self):
+        cp.pr("info", "[INFO] Signing application")
+        if self.compile_out_path_with_resource != '':
+            process = Popen(['java','-jar',self.uber_apk_signer_path, '--apks', self.compile_out_path_with_resource, '-o', os.path.dirname(self.apk_path)],
+                            stdout=PIPE,
+                            stderr=PIPE)
+            stdout, stderr1 = process.communicate()
+            self.sign_out_path_with_resource = self.compile_out_path_with_resource.replace(".apk", "-aligned-debugSigned.apk")
+            
+        if self.compile_out_path_without_resource != '':
+            process = Popen(['java','-jar',self.uber_apk_signer_path, '--apks', self.compile_out_path_without_resource, '-o', os.path.dirname(self.apk_path)],
+                            stdout=PIPE,
+                            stderr=PIPE)
+            stdout, stderr2 = process.communicate()
+            self.sign_out_path_without_resource = self.compile_out_path_without_resource.replace(".apk", "-aligned-debugSigned.apk")
 
+        #TODO check for sign errors
+        return True
     
     def check_for_exception(self,apktool_output) -> bool:
         # TODO check all apktool error
