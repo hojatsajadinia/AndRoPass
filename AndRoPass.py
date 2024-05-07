@@ -44,7 +44,18 @@ def main():
         sys.exit(0)
     
     compiler = Compiler(requirement_check.apktool_path, apk_file_path)
-    decompile_out_with_resource , decompile_out_without_resource = compiler.decompile()
+    if not compiler.decompile():
+        cp.pr("error", "[ERROR] Unable to decompile applicaiton")
+    
+    if not compiler.compile():
+        cp.pr("error", "[ERROR] Unable to compile applicaiton")
+
+    compiler
+
+
+
+
+
     
 
 

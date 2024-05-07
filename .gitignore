@@ -132,4 +132,4 @@ dmypy.json
 *.apk
 
 # Temp Dir
-utils/tmp/
+utils/temp/
