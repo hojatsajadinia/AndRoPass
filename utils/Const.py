@@ -104,4 +104,7 @@ class Const:
         "\"daemonsu\"",
         "\"/system/bin/su\"",
         "\"supersu\"",
-        "\"/system/xbin/daemonsu\""]
+        "\"/system/xbin/daemonsu\"",
+        "\"ro.debuggable\"",
+        "\"ro.secure\""
+        ]
