@@ -71,6 +71,9 @@ class Compiler:
         
     
     def compile(self):
+        #TODO Change recompiled name due to same file names
+        compile_with_res_status = True
+        compile_without_res_status = True
         cp.pr("info", "[INFO] Compiling application")
         self.compile_out_path_with_resource =  os.path.join(os.path.dirname(self.apk_path), f"AndRoPass_WR_{os.path.basename(self.apk_path)}")
         self.compile_out_path_without_resource =  os.path.join(os.path.dirname(self.apk_path), f"AndRoPass_WOR_{os.path.basename(self.apk_path)}")
@@ -82,7 +85,8 @@ class Compiler:
             stdout, stderr = process.communicate()
             if stderr != b'':
                 cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
-            compile_with_res_status = self.check_for_exception(stdout.decode('utf-8'))
+                compile_with_res_status = False
+            compile_with_res_status = compile_with_res_status and self.check_for_exception(stdout.decode('utf-8'))
 
         if self.decompile_out_path_without_resource != '':
             process = Popen(['java','-jar',self.apktool_path, 'b', self.decompile_out_path_without_resource, '-o', self.compile_out_path_without_resource ],
@@ -91,7 +95,8 @@ class Compiler:
             stdout, stderr = process.communicate()
             if stderr != b'':
                 cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
-            compile_without_res_status = self.check_for_exception(stdout.decode('utf-8'))
+                compile_without_res_status = False
+            compile_without_res_status = compile_without_res_status and self.check_for_exception(stdout.decode('utf-8'))
 
             if (compile_with_res_status or compile_without_res_status) != True:
                 # TODO Try multiple apktool versions to fix compilation errors

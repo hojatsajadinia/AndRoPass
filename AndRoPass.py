@@ -7,6 +7,7 @@ from utils.ColorPrint import ColorPrint as cp
 from utils.APKFile import APKFile
 from utils.RequirementCheck import RequirementCheck
 from utils.Compiler import Compiler
+from utils.Scanner import Scanner
 
 DES = """
  █████╗ ███╗   ██╗██████╗ ██████╗  ██████╗ ██████╗  █████╗ ███████╗███████╗
@@ -47,7 +48,15 @@ def main():
     if not compiler.decompile():
         cp.pr("error", "[ERROR] Unable to decompile applicaiton")
     
-    #TODO Scan Phase
+
+    scanner = Scanner()
+    if compiler.decompile_out_path_with_resource != '':
+        if not scanner.all_patterns_scanner(compiler.decompile_out_path_with_resource):
+            sys.exit(0)
+    if compiler.decompile_out_path_without_resource != '':
+        if not scanner.all_patterns_scanner(compiler.decompile_out_path_without_resource):
+            sys.exit(0)
+
 
     if not compiler.compile():
         cp.pr("error", "[ERROR] Unable to compile applicaiton")
