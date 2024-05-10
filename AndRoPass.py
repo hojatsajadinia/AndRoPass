@@ -53,6 +53,8 @@ def main():
     if compiler.decompile_out_path_with_resource != '':
         if not scanner.all_patterns_scanner(compiler.decompile_out_path_with_resource):
             sys.exit(0)
+            
+    scanner = Scanner()
     if compiler.decompile_out_path_without_resource != '':
         if not scanner.all_patterns_scanner(compiler.decompile_out_path_without_resource):
             sys.exit(0)
