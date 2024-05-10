@@ -51,13 +51,16 @@ def main():
 
     scanner = Scanner()
     if compiler.decompile_out_path_with_resource != '':
-        if not scanner.all_patterns_scanner(compiler.decompile_out_path_with_resource):
+        cp.pr("info", f"[INFO] Scannning Root/Emulator Detection Containing Application Resources")
+        if not scanner.patterns_scanner(compiler.decompile_out_path_with_resource):
             sys.exit(0)
             
     scanner = Scanner()
     if compiler.decompile_out_path_without_resource != '':
-        if not scanner.all_patterns_scanner(compiler.decompile_out_path_without_resource):
+        cp.pr("info", f"[INFO] Scannning Root/Emulator Detection Excluding Application Resources")
+        if not scanner.patterns_scanner(compiler.decompile_out_path_without_resource):
             sys.exit(0)
+    
 
 
     if not compiler.compile():
