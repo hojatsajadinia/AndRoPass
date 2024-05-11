@@ -6,18 +6,34 @@ import os
 import sys
 
 class Compiler:
-    def __init__(self, apktool_path, uber_apk_signer_path, apk_path) -> None:
+    def __init__(self, apktool_path, uber_apk_signer_path, apk_path, use_system_apktool, system_apktool_path) -> None:
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.apktool_path = apktool_path
         self.apk_path = apk_path
+
         self.temp_dir = self.create_temp_dir()
+
         self.decompile_out_path_with_resource = str()
         self.decompile_out_path_without_resource = str()
+        
         self.compile_out_path_with_resource = str()
         self.compile_out_path_without_resource = str()
+
         self.sign_out_path_with_resource = str()
         self.sign_out_path_without_resource = str()
+        
         self.uber_apk_signer_path = uber_apk_signer_path
+
+        self.use_system_apktool = use_system_apktool
+        self.system_apktool_path = system_apktool_path
+
+        if self.use_system_apktool: 
+            self.apktool_command = ['apktool']
+        elif self.system_apktool_path: 
+            self.apktool_command = ['java', '-jar', system_apktool_path]
+        else: 
+            self.apktool_command = ['java', '-jar', self.apktool_path]
+
 
     def create_temp_dir(self):
         try:
@@ -29,7 +45,6 @@ class Compiler:
             sys.exit(1)
 
     def decompile(self):
-
         cp.pr("info", "[INFO] Decompiling applicaiton")
         decompile_out_path_with_resource = str()
         decompile_out_path_without_resource = str()
@@ -49,7 +64,7 @@ class Compiler:
                 break
 
         # Decompile using APKTool with resource
-        process = Popen(['java','-jar',self.apktool_path, 'd', '-f', self.apk_path, '-o' , decompile_out_path_with_resource ],
+        process = Popen(self.apktool_command + [ 'd', '-f', self.apk_path, '-o' , decompile_out_path_with_resource ],
                             stdout=PIPE,
                             stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -58,7 +73,7 @@ class Compiler:
         decompile_with_res_status = self.check_for_exception(stdout.decode('utf-8'))
 
         # Decompile using APKTool without resource
-        process = Popen(['java','-jar',self.apktool_path, 'd', '-r', '-f', self.apk_path, '-o' , decompile_out_path_without_resource ],
+        process = Popen(self.apktool_command + [ 'd', '-r', '-f', self.apk_path, '-o' , decompile_out_path_without_resource ],
                             stdout=PIPE,
                             stderr=PIPE)
         stdout, stderr = process.communicate()
@@ -90,7 +105,7 @@ class Compiler:
         #TODO Compile with use aapt2 flag
         # APK compiling with resource
         if self.decompile_out_path_with_resource != '':
-            process = Popen(['java','-jar',self.apktool_path, 'b', self.decompile_out_path_with_resource, '-o', compile_out_path_with_resource],
+            process = Popen(self.apktool_command + [ 'b', self.decompile_out_path_with_resource, '-o', compile_out_path_with_resource],
                             stdout=PIPE,
                             stderr=PIPE)
             stdout, stderr = process.communicate()
@@ -101,7 +116,7 @@ class Compiler:
 
         # APK compiling without resource
         if self.decompile_out_path_without_resource != '':
-            process = Popen(['java','-jar',self.apktool_path, 'b', self.decompile_out_path_without_resource, '-o', compile_out_path_without_resource ],
+            process = Popen(self.apktool_command + [ 'b', self.decompile_out_path_without_resource, '-o', compile_out_path_without_resource ],
                             stdout=PIPE,
                             stderr=PIPE)
             stdout, stderr = process.communicate()

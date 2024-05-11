@@ -1,4 +1,4 @@
-from colorama import init, Fore
+from colorama import init, Fore, Style
 
 class ColorPrint:
     @staticmethod
@@ -14,3 +14,4 @@ class ColorPrint:
                 print(Fore.GREEN + str(input_text))
         else:
                 print(Fore.WHITE + str(input_text))
+        print(Style.RESET_ALL, end="")

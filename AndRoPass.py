@@ -19,18 +19,31 @@ https://github.com/hojatsajadinia/AndRoPass
 def argument_catcher():
     my_parser = ArgumentParser(
         prog='AndRoPass', description='Android Root and Emulator Detection Bypass Tool')
+    
     my_parser.add_argument('--apk', '-a',
                            type=str,
                            required=True,
                            help='APK full path')
+    
+    my_parser.add_argument('--apktool',
+                        required=False,
+                        help="If you set this flag, AndRoPass will use the apktool command from your system's PATH.")
+
+    my_parser.add_argument('--apktool-path',
+                        type=str,
+                        required=False,
+                        help="Set your desired apktool path in .jar format.")
     return my_parser.parse_args()
 
 
 def main():
     cp.pr('blue', DES)
 
-    # APK file validation checking
+    use_system_apktool = argument_catcher().apktool
+    system_apktool_path = argument_catcher().apktool_path
     apk_file_path = argument_catcher().apk
+
+    # APK file validation checking
     apk_file = APKFile(apk_file_path)
     if not apk_file.exist():
         cp.pr("red", "[ERROR] APK file not found")
@@ -45,7 +58,7 @@ def main():
         sys.exit(0)
     
     # APK decompiling
-    compiler = Compiler(requirement_check.apktool_path, requirement_check.uber_apk_signer_path,apk_file_path)
+    compiler = Compiler(requirement_check.apktool_path, requirement_check.uber_apk_signer_path,apk_file_path,use_system_apktool,system_apktool_path)
     if not compiler.decompile():
         cp.pr("error", "[ERROR] Unable to decompile applicaiton")
     
