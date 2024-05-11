@@ -26,6 +26,7 @@ A tool that helps bypass **Root** and **Emulator** Detection in Android Applicat
 Install AndRoPass like below:
 
 ```bash
+  git clone git clone https://github.com/hojatsajadinia/AndRoPass.git
   pip install -r requirements.txt
   python AndRoPass.py -h
 ```
