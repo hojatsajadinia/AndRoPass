@@ -46,12 +46,14 @@ class Scanner:
     def root_detection_bypass(self, file_content):
         for search_str in Const.all_root_values:
             self.root_pattern_count += file_content.count(search_str)
-            return re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
+            file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
+        return file_content
     
     def emulator_detection_bypass(self, file_content):
         for search_str in Const.all_emulator_values:
             self.emulator_pattern_count += file_content.count(search_str)
-            return re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
+            file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
+        return file_content
 
 
 
