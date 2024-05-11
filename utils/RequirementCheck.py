@@ -1,13 +1,13 @@
-from utils.ColorPrint import ColorPrint as cp
-
-from subprocess import PIPE, Popen
 import os
 import requests
+from utils.ColorPrint import ColorPrint as cp
+from subprocess import PIPE, Popen
 
 class RequirementCheck:
     
     def __init__(self) -> None:
         self.base_path = os.path.dirname(os.path.abspath(__file__))
+
         self.apktool_dir = os.path.join(self.base_path, "tools", "apktool")
         self.apktool_path = str()
 
@@ -16,6 +16,7 @@ class RequirementCheck:
 
 
     def check(self):
+        cp.pr("info", "[INFO] Checking AndRoPass requirements")
         if not self.check_java_installed():
             cp.pr("error","[ERROR] No Java installed, Please install latest version of Java and try again.")
             return False
@@ -35,7 +36,6 @@ class RequirementCheck:
             cp.pr("info", "[INFO] Uber Apk Signer binary found")
         return True
 
-    
     def check_apktool(self):
         res = False
         if not os.path.exists(self.apktool_dir):
@@ -102,8 +102,6 @@ class RequirementCheck:
             cp.pr("warn", "[WARN] Unable to get latest version of Uber APK Signer from Internet.")
             return res
         return res
-
-                
 
     def check_java_installed(self) -> bool:
         try:
