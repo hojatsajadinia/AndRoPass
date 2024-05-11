@@ -27,6 +27,7 @@ def argument_catcher():
     
     my_parser.add_argument('--apktool',
                         required=False,
+                        action='store_true',
                         help="If you set this flag, AndRoPass will use the apktool command from your system's PATH.")
 
     my_parser.add_argument('--apktool-path',
