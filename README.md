@@ -27,15 +27,17 @@ Install AndRoPass like below:
 
 ```bash
   pip install -r requirements.txt
-  python3 AndRoPass.py
+  python AndRoPass.py -h
 ```
     
 ## Example
-Install AndRoPass like below:
+Use AndRoPass like below:
 ```bash
-  python3 AndRoPass.py -a [APK_FILE.apk]
+  python AndRoPass.py -a [APK_FILE.apk]
 ```
 ## Screenshots
+
+![App Screenshot2](https://github.com/koengu/AndRoPass/raw/main/utils/resource/screenshot2.png)
 
 ![App Screenshot](https://github.com/koengu/AndRoPass/raw/main/utils/resource/screenshot.png)
 
@@ -45,10 +47,7 @@ AndRoPass can fully bypass [RootBeer](https://github.com/scottyab/rootbeer) dete
 ![RootBeerBypass](https://github.com/koengu/AndRoPass/raw/main/utils/resource/rootbeer.png)
 
 ##  Help
-
-
-Send your Apk file which AndRoPass was unable to bypass root detection mechanism to [Email](mailto:koengu@protonmail.com).
-
+If AndRoPass is unable to bypass the root/emulator detection of your app, please create an issue in this repository.
 
 
 ## License
