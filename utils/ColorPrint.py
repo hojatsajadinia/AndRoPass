@@ -1,10 +1,8 @@
-from colorama import init, Fore, Back, Style
-
+from colorama import init, Fore
 
 class ColorPrint:
     @staticmethod
     def pr(color: str, input_text: str) -> None:
-
         init()
         if color == "error":
                 print(Fore.RED + str(input_text))
