@@ -1,4 +1,5 @@
 import os
+import zipfile
 
 class APKFile:
 
@@ -13,3 +14,10 @@ class APKFile:
             if os.path.exists(os.path.join(self.base_dir, self.apk_path)):
                 return True
         return False
+
+    def validate(self):
+            try:
+                with zipfile.ZipFile(self.apk_path, 'r') as zip_ref:
+                    return 'AndroidManifest.xml' in zip_ref.namelist()
+            except zipfile.BadZipFile:
+                return False

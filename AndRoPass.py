@@ -33,7 +33,11 @@ def main():
     apk_file_path = argument_catcher().apk
     apk_file = APKFile(apk_file_path)
     if not apk_file.exist():
-        cp.pr("red", "[ERROR] APK file not found.")
+        cp.pr("red", "[ERROR] APK file not found")
+        sys.exit(0)
+    if not apk_file.validate():
+        cp.pr("red", "[ERROR] Invalid APK file")
+        sys.exit(0)
     
     # Requirement checking
     requirement_check = RequirementCheck()
