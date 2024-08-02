@@ -69,8 +69,8 @@ class Compiler:
                             stderr=PIPE)
         stdout, stderr = process.communicate()
         if stderr != b'':
-            cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
-        decompile_with_res_status = self.check_for_exception(stdout.decode('utf-8'))
+            cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
+        decompile_with_res_status = self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
 
         # Decompile using APKTool without resource
         process = Popen(self.apktool_command + [ 'd', '-r', '-f', self.apk_path, '-o' , decompile_out_path_without_resource ],
@@ -78,8 +78,8 @@ class Compiler:
                             stderr=PIPE)
         stdout, stderr = process.communicate()
         if stderr != b'':
-            cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
-        decompile_without_res_status = self.check_for_exception(stdout.decode('utf-8'))
+            cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
+        decompile_without_res_status = self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
 
         if (decompile_with_res_status or decompile_without_res_status) != True:
             # TODO Try multiple apktool versions to fix decompilation errors
@@ -110,9 +110,9 @@ class Compiler:
                             stderr=PIPE)
             stdout, stderr = process.communicate()
             if stderr != b'':
-                cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
+                cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
                 compile_with_res_status = False
-            compile_with_res_status = compile_with_res_status and self.check_for_exception(stdout.decode('utf-8'))
+            compile_with_res_status = compile_with_res_status and self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
 
         # APK compiling without resource
         if self.decompile_out_path_without_resource != '':
@@ -121,9 +121,9 @@ class Compiler:
                             stderr=PIPE)
             stdout, stderr = process.communicate()
             if stderr != b'':
-                cp.pr('error', f"[ERROR] {stderr.decode('utf-8')}")
+                cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
                 compile_without_res_status = False
-            compile_without_res_status = compile_without_res_status and self.check_for_exception(stdout.decode('utf-8'))
+            compile_without_res_status = compile_without_res_status and self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
 
             if (compile_with_res_status or compile_without_res_status) != True:
                 # TODO Try multiple apktool versions to fix compilation errors

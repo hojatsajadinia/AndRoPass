@@ -39,7 +39,7 @@ def argument_catcher():
 
 def main():
     cp.pr('blue', DES)
-
+    
     use_system_apktool = argument_catcher().apktool
     system_apktool_path = argument_catcher().apktool_path
     apk_file_path = argument_catcher().apk
