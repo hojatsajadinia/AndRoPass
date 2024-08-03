@@ -4,14 +4,13 @@ class ColorPrint:
     @staticmethod
     def pr(color: str, input_text: str) -> None:
         init()
-        if color == "error":
-                print(Fore.RED + str(input_text))
-        elif color == "warn":
-                print(Fore.CYAN + str(input_text))
-        elif color == "blue":
-                print(Fore.BLUE + str(input_text))
-        elif color == "info":
-                print(Fore.GREEN + str(input_text))
-        else:
-                print(Fore.WHITE + str(input_text))
-        print(Style.RESET_ALL, end="")
+
+        color_mapping = {
+            "error": Fore.RED,
+            "warn": Fore.CYAN,
+            "blue": Fore.BLUE,
+            "info": Fore.GREEN,
+        }
+
+        color_code = color_mapping.get(color, Fore.WHITE)
+        print(color_code + str(input_text) + Style.RESET_ALL)

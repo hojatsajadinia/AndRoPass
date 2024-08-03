@@ -1,167 +1,121 @@
-
-from subprocess import PIPE, Popen
-from utils.ColorPrint import ColorPrint as cp
-import uuid
 import os
 import sys
+import uuid
+from subprocess import PIPE, Popen
+from utils.ColorPrint import ColorPrint as cp
 
 class Compiler:
     def __init__(self, apktool_path, uber_apk_signer_path, apk_path, use_system_apktool, system_apktool_path) -> None:
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.apktool_path = apktool_path
         self.apk_path = apk_path
-
         self.temp_dir = self.create_temp_dir()
 
-        self.decompile_out_path_with_resource = str()
-        self.decompile_out_path_without_resource = str()
-        
-        self.compile_out_path_with_resource = str()
-        self.compile_out_path_without_resource = str()
+        self.paths = {
+            "decompile_with_res": "",
+            "decompile_without_res": "",
+            "compile_with_res": "",
+            "compile_without_res": "",
+            "sign_with_res": "",
+            "sign_without_res": ""
+        }
 
-        self.sign_out_path_with_resource = str()
-        self.sign_out_path_without_resource = str()
-        
+        self.status = {
+            "decompile_with_res": True,
+            "decompile_without_res": True,
+            "compile_with_res": True,
+            "compile_without_res": True
+        }
+
         self.uber_apk_signer_path = uber_apk_signer_path
-
-        self.use_system_apktool = use_system_apktool
-        self.system_apktool_path = system_apktool_path
-
-        if self.use_system_apktool: 
-            self.apktool_command = ['apktool']
-        elif self.system_apktool_path: 
-            self.apktool_command = ['java', '-jar', system_apktool_path]
-        else: 
-            self.apktool_command = ['java', '-jar', self.apktool_path]
-
+        self.apktool_command = self.get_apktool_command(use_system_apktool, system_apktool_path)
 
     def create_temp_dir(self):
+        temp_dir = os.path.join(self.base_path, "temp")
         try:
-            if not os.path.exists(os.path.join(self.base_path, "temp")):
-                os.makedirs(os.path.join(self.base_path, "temp"))
-            return os.path.join(self.base_path, "temp")
+            os.makedirs(temp_dir, exist_ok=True)
+            return temp_dir
         except Exception as e:
             cp.pr("error", f"[ERROR] Unable to create temp directory, {e}")
             sys.exit(1)
 
-    def decompile(self):
-        cp.pr("info", "[INFO] Decompiling applicaiton")
-        decompile_out_path_with_resource = str()
-        decompile_out_path_without_resource = str()
-        
-        # Generate random UUID4 for decompiling applcation with resource
-        while True:
-            uuidv4 = str(uuid.uuid4())
-            decompile_out_path_with_resource = os.path.join(self.temp_dir, uuidv4)
-            if not os.path.exists(decompile_out_path_with_resource):
-                break
-        
-        # Generate random UUID4 for decompiling applcation without resource
-        while True:
-            uuidv4 = str(uuid.uuid4())
-            decompile_out_path_without_resource = os.path.join(self.temp_dir, uuidv4)
-            if not os.path.exists(decompile_out_path_without_resource):
-                break
-
-        # Decompile using APKTool with resource
-        process = Popen(self.apktool_command + [ 'd', '-f', self.apk_path, '-o' , decompile_out_path_with_resource ],
-                            stdout=PIPE,
-                            stderr=PIPE)
-        stdout, stderr = process.communicate()
-        if stderr != b'':
-            cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
-        decompile_with_res_status = self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
-
-        # Decompile using APKTool without resource
-        process = Popen(self.apktool_command + [ 'd', '-r', '-f', self.apk_path, '-o' , decompile_out_path_without_resource ],
-                            stdout=PIPE,
-                            stderr=PIPE)
-        stdout, stderr = process.communicate()
-        if stderr != b'':
-            cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
-        decompile_without_res_status = self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
-
-        if (decompile_with_res_status or decompile_without_res_status) != True:
-            # TODO Try multiple apktool versions to fix decompilation errors
-            cp.pr("error", "[ERROR] Unable to decompile applicaiton")
-            sys.exit(1)
+    def get_apktool_command(self, use_system_apktool, system_apktool_path):
+        if use_system_apktool:
+            return ['apktool']
+        elif system_apktool_path:
+            return ['java', '-jar', system_apktool_path]
         else:
-            if decompile_with_res_status:
-                self.decompile_out_path_with_resource = decompile_out_path_with_resource
-            if decompile_without_res_status:
-                self.decompile_out_path_without_resource = decompile_out_path_without_resource
-            return True
-        
-    
+            return ['java', '-jar', self.apktool_path]
+
+    def generate_uuid_path(self, base_dir):
+        while True:
+            path = os.path.join(base_dir, str(uuid.uuid4()))
+            if not os.path.exists(path):
+                return path
+
+    def run_process(self, command):
+        process = Popen(command, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        return stdout.decode('utf-8', errors='ignore'), stderr.decode('utf-8', errors='ignore')
+
+    def check_for_exception(self, apktool_output):
+        return all(line.split(":")[0][-1] == "I" for line in apktool_output.split("\n") if ":" in line)
+
+    def decompile(self):
+        cp.pr("info", "[INFO] Decompiling application")
+        self.paths["decompile_with_res"] = self.generate_uuid_path(self.temp_dir)
+        self.paths["decompile_without_res"] = self.generate_uuid_path(self.temp_dir)
+
+        commands = [
+            (self.apktool_command + ['d', '-f', self.apk_path, '-o', self.paths["decompile_with_res"]], "decompile_with_res"),
+            (self.apktool_command + ['d', '-r', '-f', self.apk_path, '-o', self.paths["decompile_without_res"]], "decompile_without_res")
+        ]
+
+        for command, key in commands:
+            stdout, stderr = self.run_process(command)
+            if stderr:
+                self.status[key] = False
+            self.status[key] = self.status[key] and self.check_for_exception(stdout)
+
+        if not (self.status["decompile_with_res"] or self.status["decompile_without_res"]):
+            cp.pr("error", "[ERROR] Unable to decompile application")
+            sys.exit(1)
+        return True
+
     def compile(self):
-        #TODO Change recompiled name due to same file names
         cp.pr("info", "[INFO] Compiling application")
-        compile_with_res_status = True
-        compile_without_res_status = True
+        apk_name = os.path.basename(self.apk_path)
+        apk_dir = os.path.dirname(self.apk_path)
+        self.paths["compile_with_res"] = os.path.join(apk_dir, f"AndRoPass_WR_{apk_name}")
+        self.paths["compile_without_res"] = os.path.join(apk_dir, f"AndRoPass_WOR_{apk_name}")
 
-        compile_out_path_with_resource =  os.path.join(os.path.dirname(self.apk_path), f"AndRoPass_WR_{os.path.basename(self.apk_path)}")
-        compile_out_path_without_resource =  os.path.join(os.path.dirname(self.apk_path), f"AndRoPass_WOR_{os.path.basename(self.apk_path)}")
+        commands = [
+            (self.apktool_command + ['b', self.paths["decompile_with_res"], '-o', self.paths["compile_with_res"]], "compile_with_res"),
+            (self.apktool_command + ['b', self.paths["decompile_without_res"], '-o', self.paths["compile_without_res"]], "compile_without_res")
+        ]
 
-        #TODO Compile with use aapt2 flag
-        # APK compiling with resource
-        if self.decompile_out_path_with_resource != '':
-            process = Popen(self.apktool_command + [ 'b', self.decompile_out_path_with_resource, '-o', compile_out_path_with_resource],
-                            stdout=PIPE,
-                            stderr=PIPE)
-            stdout, stderr = process.communicate()
-            if stderr != b'':
-                cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
-                compile_with_res_status = False
-            compile_with_res_status = compile_with_res_status and self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
+        for command, key in commands:
+            if self.status[key.replace("compile", "decompile")]:
+                stdout, stderr = self.run_process(command)
+                if stderr:
+                    self.status[key] = False
+                self.status[key] = self.status[key] and self.check_for_exception(stdout)
 
-        # APK compiling without resource
-        if self.decompile_out_path_without_resource != '':
-            process = Popen(self.apktool_command + [ 'b', self.decompile_out_path_without_resource, '-o', compile_out_path_without_resource ],
-                            stdout=PIPE,
-                            stderr=PIPE)
-            stdout, stderr = process.communicate()
-            if stderr != b'':
-                cp.pr('error', f"[ERROR] {stderr.decode('utf-8', errors='ignore')}")
-                compile_without_res_status = False
-            compile_without_res_status = compile_without_res_status and self.check_for_exception(stdout.decode('utf-8', errors='ignore'))
+        if not (self.status["compile_with_res"] or self.status["compile_without_res"]):
+            cp.pr("error", "[ERROR] Unable to compile application")
+            sys.exit(1)
+        return True
 
-            if (compile_with_res_status or compile_without_res_status) != True:
-                # TODO Try multiple apktool versions to fix compilation errors
-                cp.pr("error", "[ERROR] Unable to decompile applicaiton")
-                sys.exit(1)
-            else:
-                if compile_with_res_status:
-                    self.compile_out_path_with_resource = compile_out_path_with_resource
-                if compile_without_res_status:
-                    self.compile_out_path_without_resource = compile_out_path_without_resource
-                return True
-            
     def signer(self):
         cp.pr("info", "[INFO] Signing application")
+        commands = [
+            (['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_with_res"], '-o', os.path.dirname(self.apk_path)], "sign_with_res"),
+            (['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_without_res"], '-o', os.path.dirname(self.apk_path)], "sign_without_res")
+        ]
 
-        # APK signing with resource
-        if self.compile_out_path_with_resource != '':
-            process = Popen(['java','-jar',self.uber_apk_signer_path, '--apks', self.compile_out_path_with_resource, '-o', os.path.dirname(self.apk_path)],
-                            stdout=PIPE,
-                            stderr=PIPE)
-            stdout, stderr1 = process.communicate()
-            self.sign_out_path_with_resource = self.compile_out_path_with_resource.replace(".apk", "-aligned-debugSigned.apk")
-            
-        # APK signing without resource
-        if self.compile_out_path_without_resource != '':
-            process = Popen(['java','-jar',self.uber_apk_signer_path, '--apks', self.compile_out_path_without_resource, '-o', os.path.dirname(self.apk_path)],
-                            stdout=PIPE,
-                            stderr=PIPE)
-            stdout, stderr2 = process.communicate()
-            self.sign_out_path_without_resource = self.compile_out_path_without_resource.replace(".apk", "-aligned-debugSigned.apk")
+        for command, key in commands:
+            if self.paths[key.replace("sign", "compile")]:
+                self.run_process(command)
+                self.paths[key] = self.paths[key.replace("sign", "compile")].replace(".apk", "-aligned-debugSigned.apk")
 
-        #TODO check for sign errors
-        return True
-    
-    def check_for_exception(self,apktool_output) -> bool:
-        # TODO check all apktool error
-        for line in apktool_output.split("\n"):
-            if ":" in line:
-                if line.split(":")[0][-1] != "I":
-                    return False
         return True

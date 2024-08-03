@@ -7,53 +7,54 @@ class Scanner:
     def __init__(self) -> None:
         self.root_pattern_count = 0
         self.emulator_pattern_count = 0
-    
-    def patterns_scanner(self,directory_path):
-        self.patterns_scanner_implementation(directory_path)
-        
-        if self.root_pattern_count:
-            cp.pr("info", f"[INFO] {self.root_pattern_count} Root Detection Pattern/s Detected.")
-        if self.emulator_pattern_count:
-            cp.pr("info", f"[INFO] {self.emulator_pattern_count} Emulator Detection Pattern/s Detected.")
 
+    def patterns_scanner(self, directory_path: str) -> bool:
+        self.scan_directory(directory_path)
         
+        self.log_detection_results()
+
         if self.root_pattern_count or self.emulator_pattern_count:
             return True
-        else:
-            cp.pr("error", "[ERROR] Unable to scann the application")
-            return False
-      
-    def patterns_scanner_implementation(self,directory_path):
+        cp.pr("error", "[ERROR] Unable to scan the application")
+        return False
+
+    def scan_directory(self, directory_path: str) -> None:
         try:
             for root, _, files in os.walk(directory_path):
                 for file_name in files:
-                    file_path = os.path.join(root, file_name)
-                    if file_path.endswith(".smali"):
-                        with open(file_path, 'r') as file:
-                            file_content = file.read()
-
-                            # Root Detection
-                            file_content = self.root_detection_bypass(file_content)
-
-                            # Emulator Detection
-                            file_content = self.emulator_detection_bypass(file_content)
-
-                        with open(file_path, 'w') as file:
-                            file.write(file_content)
+                    if file_name.endswith(".smali"):
+                        file_path = os.path.join(root, file_name)
+                        self.process_file(file_path)
         except Exception as e:
-            pass
-    
-    def root_detection_bypass(self, file_content):
+            cp.pr("error", f"[ERROR] An error occurred while scanning the directory: {e}")
+
+    def process_file(self, file_path: str) -> None:
+        try:
+            with open(file_path, 'r') as file:
+                file_content = file.read()
+
+            file_content = self.root_detection_bypass(file_content)
+            file_content = self.emulator_detection_bypass(file_content)
+
+            with open(file_path, 'w') as file:
+                file.write(file_content)
+        except Exception as e:
+            cp.pr("error", f"[ERROR] An error occurred while processing the file {file_path}: {e}")
+
+    def root_detection_bypass(self, file_content: str) -> str:
         for search_str in Const.all_root_values:
             self.root_pattern_count += file_content.count(search_str)
             file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
         return file_content
-    
-    def emulator_detection_bypass(self, file_content):
+
+    def emulator_detection_bypass(self, file_content: str) -> str:
         for search_str in Const.all_emulator_values:
             self.emulator_pattern_count += file_content.count(search_str)
             file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
         return file_content
 
-
-
+    def log_detection_results(self) -> None:
+        if self.root_pattern_count:
+            cp.pr("info", f"[INFO] {self.root_pattern_count} Root Detection Pattern(s) Detected.")
+        if self.emulator_pattern_count:
+            cp.pr("info", f"[INFO] {self.emulator_pattern_count} Emulator Detection Pattern(s) Detected.")
