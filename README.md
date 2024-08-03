@@ -47,9 +47,9 @@ Use AndRoPass like below:
 AndRoPass can fully bypass [RootBeer](https://github.com/scottyab/rootbeer) detection mechanism like below:
 ![RootBeerBypass](https://github.com/koengu/AndRoPass/raw/main/utils/resource/rootbeer.png)
 
-##  Help
-If AndRoPass is unable to bypass the root/emulator detection of your app, please create an issue in this repository.
+## Difference between WR and WOR:
 
+There is no major difference between WR and WOR; the distinction lies in the decompilation techniques used. You can test either WR or WOR to see which one works best for you.
 
 ## License
 
