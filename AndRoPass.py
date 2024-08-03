@@ -54,6 +54,7 @@ def main():
         if not scanner.patterns_scanner(compiler.paths["decompile_with_res"]):
             sys.exit(1)
 
+    scanner = Scanner()
     if compiler.status["decompile_without_res"]:
         cp.pr("info", "[INFO] Scanning Root/Emulator Detection Excluding Application Resources")
         if not scanner.patterns_scanner(compiler.paths["decompile_without_res"]):

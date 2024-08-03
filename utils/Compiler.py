@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 from subprocess import PIPE, Popen
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from utils.ColorPrint import ColorPrint as cp
 
 class Compiler:
@@ -54,8 +55,8 @@ class Compiler:
                 return path
 
     def run_process(self, command):
-        process = Popen(command, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
+        with Popen(command, stdout=PIPE, stderr=PIPE) as process:
+            stdout, stderr = process.communicate()
         return stdout.decode('utf-8', errors='ignore'), stderr.decode('utf-8', errors='ignore')
 
     def check_for_exception(self, apktool_output):
@@ -71,11 +72,14 @@ class Compiler:
             (self.apktool_command + ['d', '-r', '-f', self.apk_path, '-o', self.paths["decompile_without_res"]], "decompile_without_res")
         ]
 
-        for command, key in commands:
-            stdout, stderr = self.run_process(command)
-            if stderr:
-                self.status[key] = False
-            self.status[key] = self.status[key] and self.check_for_exception(stdout)
+        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
+            futures = {executor.submit(self.run_process, command): key for command, key in commands}
+            for future in as_completed(futures):
+                key = futures[future]
+                stdout, stderr = future.result()
+                if stderr:
+                    self.status[key] = False
+                self.status[key] = self.status[key] and self.check_for_exception(stdout)
 
         if not (self.status["decompile_with_res"] or self.status["decompile_without_res"]):
             cp.pr("error", "[ERROR] Unable to decompile application")
@@ -96,9 +100,11 @@ class Compiler:
         if self.status["decompile_without_res"]:
             commands.append((self.apktool_command + ['b', self.paths["decompile_without_res"], '-o', self.paths["compile_without_res"]], "compile_without_res"))
 
-        for command, key in commands:
-            if self.status[key.replace("compile", "decompile")]:
-                stdout, stderr = self.run_process(command)
+        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
+            futures = {executor.submit(self.run_process, command): key for command, key in commands}
+            for future in as_completed(futures):
+                key = futures[future]
+                stdout, stderr = future.result()
                 if stderr:
                     self.status[key] = False
                 self.status[key] = self.status[key] and self.check_for_exception(stdout)
@@ -117,9 +123,11 @@ class Compiler:
         if self.status["compile_without_res"]:
             commands.append((['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_without_res"], '-o', os.path.dirname(self.apk_path)], "sign_without_res"))
 
-        for command, key in commands:
-            if self.paths[key.replace("sign", "compile")]:
-                self.run_process(command)
+        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
+            futures = {executor.submit(self.run_process, command): key for command, key in commands}
+            for future in as_completed(futures):
+                key = futures[future]
+                # Assign paths after the process completes
                 self.paths[key] = self.paths[key.replace("sign", "compile")].replace(".apk", "-aligned-debugSigned.apk")
 
         return True
