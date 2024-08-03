@@ -89,10 +89,12 @@ class Compiler:
         self.paths["compile_with_res"] = os.path.join(apk_dir, f"AndRoPass_WR_{apk_name}")
         self.paths["compile_without_res"] = os.path.join(apk_dir, f"AndRoPass_WOR_{apk_name}")
 
-        commands = [
-            (self.apktool_command + ['b', self.paths["decompile_with_res"], '-o', self.paths["compile_with_res"]], "compile_with_res"),
-            (self.apktool_command + ['b', self.paths["decompile_without_res"], '-o', self.paths["compile_without_res"]], "compile_without_res")
-        ]
+        commands = []
+
+        if self.status["decompile_with_res"]:
+            commands.append((self.apktool_command + ['b', self.paths["decompile_with_res"], '-o', self.paths["compile_with_res"]], "compile_with_res"))
+        if self.status["decompile_without_res"]:
+            commands.append((self.apktool_command + ['b', self.paths["decompile_without_res"], '-o', self.paths["compile_without_res"]], "compile_without_res"))
 
         for command, key in commands:
             if self.status[key.replace("compile", "decompile")]:
@@ -108,10 +110,12 @@ class Compiler:
 
     def signer(self):
         cp.pr("info", "[INFO] Signing application")
-        commands = [
-            (['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_with_res"], '-o', os.path.dirname(self.apk_path)], "sign_with_res"),
-            (['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_without_res"], '-o', os.path.dirname(self.apk_path)], "sign_without_res")
-        ]
+        commands = []
+
+        if self.status["compile_with_res"]:
+            commands.append((['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_with_res"], '-o', os.path.dirname(self.apk_path)], "sign_with_res"))
+        if self.status["compile_without_res"]:
+            commands.append((['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_without_res"], '-o', os.path.dirname(self.apk_path)], "sign_without_res"))
 
         for command, key in commands:
             if self.paths[key.replace("sign", "compile")]:
