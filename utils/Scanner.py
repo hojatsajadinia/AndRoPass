@@ -1,5 +1,5 @@
 import os
-import re
+import regex as re
 from utils.Const import Const
 from utils.ColorPrint import ColorPrint as cp
 
