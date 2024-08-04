@@ -43,7 +43,7 @@ You can build your own Docker image like below:
   docker build . -t AndRoPass
 ```
 
-## Run via Docker
+## Run via Docker (Recommended)
 Run the Docker version of AndRoPass:
 ```bash
   docker run -it -v [APK_DIR_PATH]:/data hojatsajadinia/andropass:latest -a /data/APK_NAME.APK
