@@ -1,5 +1,6 @@
 import sys
 from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from utils.ColorPrint import ColorPrint as cp
 from utils.APKFile import APKFile
 from utils.RequirementCheck import RequirementCheck
@@ -22,6 +23,11 @@ def parse_arguments():
     parser.add_argument('--apktool', required=False, action='store_true', help="Use the apktool command from your system's PATH.")
     parser.add_argument('--apktool-path', type=str, required=False, help="Set your desired apktool path in .jar format.")
     return parser.parse_args()
+
+def scan_patterns(scanner, path, description):
+    cp.pr("info", f"[INFO] Scanning {description}")
+    if not scanner.patterns_scanner(path):
+        sys.exit(1)
 
 def main():
     cp.pr('blue', DES)
@@ -47,19 +53,20 @@ def main():
     if not compiler.decompile():
         cp.pr("error", "[ERROR] Unable to decompile application")
         sys.exit(1)
-    
-    scanner = Scanner()
-    if compiler.status["decompile_with_res"]:
-        cp.pr("info", "[INFO] Scanning Root/Emulator Detection Containing Application Resources")
-        if not scanner.patterns_scanner(compiler.paths["decompile_with_res"]):
-            sys.exit(1)
 
-    scanner = Scanner()
-    if compiler.status["decompile_without_res"]:
-        cp.pr("info", "[INFO] Scanning Root/Emulator Detection Excluding Application Resources")
-        if not scanner.patterns_scanner(compiler.paths["decompile_without_res"]):
-            sys.exit(1)
-    
+    tasks = []
+    with ThreadPoolExecutor() as executor:
+        if compiler.status["decompile_with_res"]:
+            scanner_with_res = Scanner()
+            tasks.append(executor.submit(scan_patterns, scanner_with_res, compiler.paths["decompile_with_res"], "Root/Emulator Detection Containing Application Resources"))
+        
+        if compiler.status["decompile_without_res"]:
+            scanner_without_res = Scanner()
+            tasks.append(executor.submit(scan_patterns, scanner_without_res, compiler.paths["decompile_without_res"], "Root/Emulator Detection Excluding Application Resources"))
+        
+        for future in as_completed(tasks):
+            future.result()  # Will raise an exception if the scan task failed
+
     if not compiler.compile():
         cp.pr("error", "[ERROR] Unable to compile application")
         sys.exit(1)
@@ -69,9 +76,9 @@ def main():
         sys.exit(1)
     
     if compiler.paths["sign_with_res"]:
-        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths["sign_with_res"]}")
+        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths['sign_with_res']}")
     if compiler.paths["sign_without_res"]:
-        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths["sign_without_res"]}")
+        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths['sign_without_res']}")
 
 if __name__ == "__main__":
     main()
