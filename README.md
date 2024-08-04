@@ -36,6 +36,18 @@ Use AndRoPass like below:
 ```bash
   python AndRoPass.py -a [APK_FILE.apk]
 ```
+
+## Build docker
+You can build your own Docker image like below:
+```bash
+  docker build . -t AndRoPass
+```
+
+## Run via Docker
+Run the Docker version of AndRoPass:
+```bash
+  docker run -it -v [APK_DIR_PATH]:/data hojatsajadinia/andropass:latest -a /data/APK_NAME.APK
+```
 ## Screenshots
 
 ![App Screenshot2](https://github.com/koengu/AndRoPass/raw/main/utils/resource/screenshot2.png)
