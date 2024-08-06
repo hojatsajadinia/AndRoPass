@@ -17,7 +17,7 @@ A tool that helps bypass **Root** and **Emulator** Detection in Android Applicat
 
 
 ## Requirements
-* Java Development Kit (JDK) > 8
+* Java Development Kit (JDK) > 11
 * Python > 3.10
 
 
@@ -26,7 +26,7 @@ A tool that helps bypass **Root** and **Emulator** Detection in Android Applicat
 Install AndRoPass like below:
 
 ```bash
-  git clone git clone https://github.com/hojatsajadinia/AndRoPass.git
+  git clone https://github.com/hojatsajadinia/AndRoPass.git
   pip install -r requirements.txt
   python AndRoPass.py -h
 ```
