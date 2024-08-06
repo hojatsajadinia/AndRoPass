@@ -24,11 +24,6 @@ def parse_arguments():
     parser.add_argument('--apktool-path', type=str, required=False, help="Set your desired apktool path in .jar format.")
     return parser.parse_args()
 
-def scan_patterns(scanner, path, description):
-    cp.pr("info", f"[INFO] Scanning {description}")
-    if not scanner.patterns_scanner(path):
-        sys.exit(1)
-
 def main():
     cp.pr('blue', DES)
 
@@ -58,11 +53,11 @@ def main():
     with ThreadPoolExecutor() as executor:
         if compiler.status["decompile_with_res"]:
             scanner_with_res = Scanner()
-            tasks.append(executor.submit(scan_patterns, scanner_with_res, compiler.paths["decompile_with_res"], "Root/Emulator Detection Containing Application Resources"))
+            tasks.append(executor.submit(scanner_with_res.patterns_scanner, compiler.paths["decompile_with_res"]))
         
         if compiler.status["decompile_without_res"]:
-            scanner_without_res = Scanner()
-            tasks.append(executor.submit(scan_patterns, scanner_without_res, compiler.paths["decompile_without_res"], "Root/Emulator Detection Excluding Application Resources"))
+            scanner_without_res = Scanner(False)
+            tasks.append(executor.submit(scanner_without_res.patterns_scanner, compiler.paths["decompile_with_res"]))
         
         for future in as_completed(tasks):
             future.result()  # Will raise an exception if the scan task failed

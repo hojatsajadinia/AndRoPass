@@ -1,12 +1,14 @@
 import os
+from pathlib import Path
 import regex as re
 from utils.Const import Const
 from utils.ColorPrint import ColorPrint as cp
 
 class Scanner:
-    def __init__(self) -> None:
+    def __init__(self, scan_with_resource: bool = True) -> None:
         self.root_pattern_count = 0
         self.emulator_pattern_count = 0
+        self.scan_with_resource = scan_with_resource
 
     def patterns_scanner(self, directory_path: str) -> bool:
         self.scan_directory(directory_path)
@@ -23,23 +25,26 @@ class Scanner:
             for root, _, files in os.walk(directory_path):
                 for file_name in files:
                     if file_name.endswith(".smali"):
-                        file_path = os.path.join(root, file_name)
+                        file_path = Path(root) / file_name
                         self.process_file(file_path)
         except Exception as e:
             cp.pr("error", f"[ERROR] An error occurred while scanning the directory: {e}")
 
-    def process_file(self, file_path: str) -> None:
+    def process_file(self, file_path: Path) -> None:
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, 'r+') as file:
                 file_content = file.read()
 
-            file_content = self.root_detection_bypass(file_content)
-            file_content = self.emulator_detection_bypass(file_content)
+                file_content = self.root_detection_bypass(file_content)
+                file_content = self.emulator_detection_bypass(file_content)
 
-            with open(file_path, 'w') as file:
+                file.seek(0)
                 file.write(file_content)
+                file.truncate()
+
         except Exception as e:
             cp.pr("error", f"[ERROR] An error occurred while processing the file {file_path}: {e}")
+
 
     def root_detection_bypass(self, file_content: str) -> str:
         for search_str in Const.all_root_values:
@@ -54,7 +59,8 @@ class Scanner:
         return file_content
 
     def log_detection_results(self) -> None:
+        resource_suffix = "" if self.scan_with_resource else " - without Resource"
         if self.root_pattern_count:
-            cp.pr("info", f"[INFO] {self.root_pattern_count} Root Detection Pattern(s) Detected.")
+            cp.pr("info", f"[INFO] {self.root_pattern_count} Root Detection Pattern(s) Detected{resource_suffix}.")
         if self.emulator_pattern_count:
-            cp.pr("info", f"[INFO] {self.emulator_pattern_count} Emulator Detection Pattern(s) Detected.")
+            cp.pr("info", f"[INFO] {self.emulator_pattern_count} Emulator Detection Pattern(s) Detected{resource_suffix}.")

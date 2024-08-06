@@ -1,6 +1,6 @@
 
 class Const:
-    all_root_values = [
+    all_root_values = (
         "\"/system\"",
         "\"/system/bin\"",
         "\"/system/sbin\"",
@@ -123,9 +123,9 @@ class Const:
         "\"clesses.dex\"",
         "\"ro.debuggable\"",
         "\"ro.secure\""
-        ]
+    )
 
-    all_emulator_values = [
+    all_emulator_values = (
         "\"15555215554\"", 
         "\"15555215556\"", 
         "\"15555215558\"", 
@@ -203,4 +203,4 @@ class Const:
         "\"tunl0\"", #2
         "\"eth0\"", #2
         "\"android.os.SystemProperties\"" #2
-    ]
+    )
