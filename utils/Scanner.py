@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-import regex as re
+import re
 from utils.Const import Const
 from utils.ColorPrint import ColorPrint as cp
 

@@ -1,6 +1,6 @@
 import os
 import requests
-from subprocess import PIPE, Popen, TimeoutError
+from subprocess import PIPE, Popen
 from pathlib import Path
 from typing import Optional, Tuple
 from utils.ColorPrint import ColorPrint as cp
@@ -54,7 +54,7 @@ class RequirementCheck:
             if 'version' in version_output:
                 self.java_version = version_output.split('\n')[0]
                 return True
-        except (FileNotFoundError, TimeoutError, Exception):
+        except (FileNotFoundError, Exception):
             pass
         return False
 
