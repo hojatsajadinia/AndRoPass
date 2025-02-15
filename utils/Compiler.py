@@ -10,25 +10,20 @@ class Compiler:
         self.base_path = os.path.dirname(os.path.abspath(__file__))
         self.apktool_path = apktool_path
         self.apk_path = apk_path
-        self.temp_dir = self.create_temp_dir()
-
-        self.paths = {
-            "decompile_with_res": "",
-            "decompile_without_res": "",
-            "compile_with_res": "",
-            "compile_without_res": "",
-            "sign_with_res": "",
-            "sign_without_res": ""
-        }
-
-        self.status = {
-            "decompile_with_res": True,
-            "decompile_without_res": True,
-            "compile_with_res": True,
-            "compile_without_res": True
-        }
-
         self.uber_apk_signer_path = uber_apk_signer_path
+        self.temp_dir = self.create_temp_dir()
+        
+        self.paths = {key: "" for key in [
+            "decompile_with_res", "decompile_without_res",
+            "compile_with_res", "compile_without_res",
+            "sign_with_res", "sign_without_res"
+        ]}
+        
+        self.status = {key: True for key in [
+            "decompile_with_res", "decompile_without_res",
+            "compile_with_res", "compile_without_res"
+        ]}
+        
         self.apktool_command = self.get_apktool_command(use_system_apktool, system_apktool_path)
 
     def create_temp_dir(self):
@@ -62,6 +57,19 @@ class Compiler:
     def check_for_exception(self, apktool_output):
         return all(line.split(":")[0][-1] == "I" for line in apktool_output.split("\n") if ":" in line)
 
+    def execute_parallel_commands(self, commands: list) -> bool:
+        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
+            futures = {executor.submit(self.run_process, cmd): key for cmd, key in commands}
+            
+            for future in as_completed(futures):
+                key = futures[future]
+                stdout, stderr = future.result()
+                
+                if stderr or not self.check_for_exception(stdout):
+                    self.status[key] = False
+                    
+        return any(self.status.values())
+
     def decompile(self):
         cp.pr("info", "[INFO] Decompiling application")
         self.paths["decompile_with_res"] = self.generate_uuid_path(self.temp_dir)
@@ -72,19 +80,7 @@ class Compiler:
             (self.apktool_command + ['d', '-r', '-f', self.apk_path, '-o', self.paths["decompile_without_res"]], "decompile_without_res")
         ]
 
-        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
-            futures = {executor.submit(self.run_process, command): key for command, key in commands}
-            for future in as_completed(futures):
-                key = futures[future]
-                stdout, stderr = future.result()
-                if stderr:
-                    self.status[key] = False
-                self.status[key] = self.status[key] and self.check_for_exception(stdout)
-
-        if not (self.status["decompile_with_res"] or self.status["decompile_without_res"]):
-            cp.pr("error", "[ERROR] Unable to decompile application")
-            sys.exit(1)
-        return True
+        return self.execute_parallel_commands(commands)
 
     def compile(self):
         cp.pr("info", "[INFO] Compiling application")
@@ -100,19 +96,7 @@ class Compiler:
         if self.status["decompile_without_res"]:
             commands.append((self.apktool_command + ['b', self.paths["decompile_without_res"], '-o', self.paths["compile_without_res"]], "compile_without_res"))
 
-        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
-            futures = {executor.submit(self.run_process, command): key for command, key in commands}
-            for future in as_completed(futures):
-                key = futures[future]
-                stdout, stderr = future.result()
-                if stderr:
-                    self.status[key] = False
-                self.status[key] = self.status[key] and self.check_for_exception(stdout)
-
-        if not (self.status["compile_with_res"] or self.status["compile_without_res"]):
-            cp.pr("error", "[ERROR] Unable to compile application")
-            sys.exit(1)
-        return True
+        return self.execute_parallel_commands(commands)
 
     def signer(self):
         cp.pr("info", "[INFO] Signing application")
@@ -123,11 +107,4 @@ class Compiler:
         if self.status["compile_without_res"]:
             commands.append((['java', '-jar', self.uber_apk_signer_path, '--apks', self.paths["compile_without_res"], '-o', os.path.dirname(self.apk_path)], "sign_without_res"))
 
-        with ThreadPoolExecutor(max_workers=len(commands)) as executor:
-            futures = {executor.submit(self.run_process, command): key for command, key in commands}
-            for future in as_completed(futures):
-                key = futures[future]
-                # Assign paths after the process completes
-                self.paths[key] = self.paths[key.replace("sign", "compile")].replace(".apk", "-aligned-debugSigned.apk")
-
-        return True
+        return self.execute_parallel_commands(commands)

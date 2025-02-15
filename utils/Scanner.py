@@ -6,16 +6,17 @@ from utils.ColorPrint import ColorPrint as cp
 
 class Scanner:
     def __init__(self, scan_with_resource: bool = True) -> None:
-        self.root_pattern_count = 0
-        self.emulator_pattern_count = 0
+        self.pattern_counts = {
+            'root': 0,
+            'emulator': 0
+        }
         self.scan_with_resource = scan_with_resource
 
     def patterns_scanner(self, directory_path: str) -> bool:
         self.scan_directory(directory_path)
-        
         self.log_detection_results()
-
-        if self.root_pattern_count or self.emulator_pattern_count:
+        
+        if any(self.pattern_counts.values()):
             return True
         cp.pr("error", "[ERROR] Unable to scan the application")
         return False
@@ -33,34 +34,35 @@ class Scanner:
     def process_file(self, file_path: Path) -> None:
         try:
             with open(file_path, 'r+') as file:
-                file_content = file.read()
-
-                file_content = self.root_detection_bypass(file_content)
-                file_content = self.emulator_detection_bypass(file_content)
-
-                file.seek(0)
-                file.write(file_content)
-                file.truncate()
+                content = file.read()
+                modified_content = self.bypass_detections(content)
+                
+                if modified_content != content:
+                    file.seek(0)
+                    file.write(modified_content)
+                    file.truncate()
 
         except Exception as e:
-            cp.pr("error", f"[ERROR] An error occurred while processing the file {file_path}: {e}")
+            cp.pr("error", f"[ERROR] An error occurred while processing {file_path}: {e}")
 
-
-    def root_detection_bypass(self, file_content: str) -> str:
-        for search_str in Const.all_root_values:
-            self.root_pattern_count += file_content.count(search_str)
-            file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
-        return file_content
-
-    def emulator_detection_bypass(self, file_content: str) -> str:
-        for search_str in Const.all_emulator_values:
-            self.emulator_pattern_count += file_content.count(search_str)
-            file_content = re.sub(search_str, f"{search_str[0]}X{search_str[2:]}", file_content)
-        return file_content
+    def bypass_detections(self, content: str) -> str:
+        patterns = {
+            'root': Const.all_root_values,
+            'emulator': Const.all_emulator_values
+        }
+        
+        for detection_type, pattern_list in patterns.items():
+            for pattern in pattern_list:
+                count = content.count(pattern)
+                self.pattern_counts[detection_type] += count
+                if count > 0:
+                    content = re.sub(pattern, f"{pattern[0]}X{pattern[2:]}", content)
+        
+        return content
 
     def log_detection_results(self) -> None:
         resource_suffix = "" if self.scan_with_resource else " - without Resource"
-        if self.root_pattern_count:
-            cp.pr("info", f"[INFO] {self.root_pattern_count} Root Detection Pattern(s) Detected{resource_suffix}.")
-        if self.emulator_pattern_count:
-            cp.pr("info", f"[INFO] {self.emulator_pattern_count} Emulator Detection Pattern(s) Detected{resource_suffix}.")
+        
+        for detection_type, count in self.pattern_counts.items():
+            if count > 0:
+                cp.pr("info", f"[INFO] {count} {detection_type.title()} Detection Pattern(s) Detected{resource_suffix}.")

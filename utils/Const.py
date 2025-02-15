@@ -1,6 +1,10 @@
+from typing import Tuple
 
 class Const:
-    all_root_values = (
+    """Constants used throughout the application."""
+    
+    # Root detection related paths
+    ROOT_PATHS: Tuple[str, ...] = (
         "\"/system\"",
         "\"/system/bin\"",
         "\"/system/sbin\"",
@@ -13,19 +17,10 @@ class Const:
         "\"/data/local\"",
         "\"/data/local/bin\"",
         "\"/data/local/xbin\"",
-        "\"/system/xbin/su\"",
-        "\"/sbin\"",
-        "\"/su/bin\"",
-        "\"/system/bin\"",
-        "\"/system/bin/.ext\"",
-        "\"/system/bin/failsafe\"",
-        "\"/system/sd/xbi/\"",
-        "\"/system/usr/we-need-root\"",
-        "\"/system/xbin\"",
-        "\"/cache\"",
-        "\"/data\"",
-        "\"/dev\"",
-        "\"/sbin/su\"",
+    )
+    
+    # Root detection related apps
+    ROOT_APPS: Tuple[str, ...] = (
         "\"com.devadvance.rootcloak\"",
         "\"com.devadvance.rootcloakplus\"",
         "\"de.robv.android.xposed.installer\"",
@@ -100,7 +95,6 @@ class Const:
         "\"/system/lib64/libwhale.edxp.so\"",
         "\"/system/framework/edxp.jar\"",
         "\"mobi.acpm.sslunpinning\"",
-        "\"de.robv.android.xposed.installer\"",
         "\"mobi.acpm.inspeckage\"",
         "\"com.mwr.dz\"",
         "\"XposedBridge.jar\"",
@@ -124,28 +118,32 @@ class Const:
         "\"ro.debuggable\"",
         "\"ro.secure\""
     )
-
-    all_emulator_values = (
-        "\"15555215554\"", 
-        "\"15555215556\"", 
-        "\"15555215558\"", 
-        "\"15555215560\"", 
-        "\"15555215562\"", 
+    
+    # Emulator detection related values
+    EMULATOR_NUMBERS: Tuple[str, ...] = (
+        "\"15555215554\"",
+        "\"15555215556\"",
+        "\"15555215558\"",
+        "\"15555215560\"",
+        "\"15555215562\"",
         "\"15555215564\"",
-        "\"15555215566\"", 
-        "\"15555215568\"", 
-        "\"15555215570\"", 
-        "\"15555215572\"", 
-        "\"15555215574\"", 
+        "\"15555215566\"",
+        "\"15555215568\"",
+        "\"15555215570\"",
+        "\"15555215572\"",
+        "\"15555215574\"",
         "\"15555215576\"",
-        "\"15555215578\"", 
-        "\"15555215580\"", 
-        "\"15555215582\"", 
+        "\"15555215578\"",
+        "\"15555215580\"",
+        "\"15555215582\"",
         "\"15555215584\"",
         "\"000000000000000\"",
         "\"e21833235b6eef10\"",
         "\"012345678912345\"",
         "\"310260000000000\"",
+    )
+    
+    EMULATOR_PATHS: Tuple[str, ...] = (
         "\"/dev/socket/genyd\"",
         "\"/dev/socket/baseband_genyd\"",
         "\"/dev/socket/qemud\"",
@@ -187,11 +185,11 @@ class Const:
         "\"com.bluestacks\"",
         "\"com.bignox.app\"",
         "\"com.vphone.launcher\"",
-        "\"nox\"", #2
-        "\"generic\"", #2
+        "\"nox\"",
+        "\"generic\"",
         "\"google_sdk\"",
         "\"droid4x\"",
-        "\"emulator\"", #2
+        "\"emulator\"",
         "\"Android SDK built for x86\"",
         "\"genymotion\"",
         "\"goldfish\"",
@@ -199,8 +197,12 @@ class Const:
         "\"android_x86\"",
         "\"ranchu\"",
         "\"/system/bin/netcfg\"",
-        "\"wlan0\"", #2
-        "\"tunl0\"", #2
-        "\"eth0\"", #2
-        "\"android.os.SystemProperties\"" #2
+        "\"wlan0\"",
+        "\"tunl0\"",
+        "\"eth0\"",
+        "\"android.os.SystemProperties\""
     )
+    
+    # Combine all values
+    all_root_values: Tuple[str, ...] = ROOT_PATHS + ROOT_APPS
+    all_emulator_values: Tuple[str, ...] = EMULATOR_NUMBERS + EMULATOR_PATHS

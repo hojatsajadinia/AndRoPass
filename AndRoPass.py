@@ -26,54 +26,81 @@ def parse_arguments():
 
 def main():
     cp.pr('blue', DES)
+    
+    try:
+        args = parse_arguments()
+        apk_file = validate_apk(args.apk)
+        
+        requirement_check = RequirementCheck()
+        if not requirement_check.check():
+            sys.exit(1)
+        
+        compiler = setup_compiler(requirement_check, args)
+        if not process_apk(compiler):
+            sys.exit(1)
+            
+        display_output_paths(compiler)
+        
+    except Exception as e:
+        cp.pr("error", f"[ERROR] An unexpected error occurred: {e}")
+        sys.exit(1)
 
-    args = parse_arguments()
-    apk_file_path = args.apk
-    use_system_apktool = args.apktool
-    system_apktool_path = args.apktool_path
-
-    apk_file = APKFile(apk_file_path)
+def validate_apk(apk_path: str) -> APKFile:
+    apk_file = APKFile(apk_path)
     if not apk_file.exists():
         cp.pr("red", "[ERROR] APK file not found")
         sys.exit(1)
     if not apk_file.validate():
         cp.pr("red", "[ERROR] Invalid APK file")
         sys.exit(1)
-    
-    requirement_check = RequirementCheck()
-    if not requirement_check.check():
-        sys.exit(1)
-    
-    compiler = Compiler(requirement_check.apktool_path, requirement_check.uber_apk_signer_path, apk_file_path, use_system_apktool, system_apktool_path)
+    return apk_file
+
+def setup_compiler(requirement_check: RequirementCheck, args) -> Compiler:
+    return Compiler(
+        requirement_check.apktool_path,
+        requirement_check.uber_apk_signer_path,
+        args.apk,
+        args.apktool,
+        args.apktool_path
+    )
+
+def process_apk(compiler: Compiler) -> bool:
     if not compiler.decompile():
         cp.pr("error", "[ERROR] Unable to decompile application")
-        sys.exit(1)
+        return False
+        
+    if not run_scanners(compiler):
+        return False
+        
+    if not compiler.compile():
+        cp.pr("error", "[ERROR] Unable to compile application")
+        return False
+        
+    if not compiler.signer():
+        cp.pr("error", "[ERROR] Unable to sign application")
+        return False
+        
+    return True
 
+def run_scanners(compiler: Compiler) -> bool:
     tasks = []
     with ThreadPoolExecutor() as executor:
         if compiler.status["decompile_with_res"]:
-            scanner_with_res = Scanner()
-            tasks.append(executor.submit(scanner_with_res.patterns_scanner, compiler.paths["decompile_with_res"]))
-        
+            tasks.append(executor.submit(Scanner().patterns_scanner, compiler.paths["decompile_with_res"]))
         if compiler.status["decompile_without_res"]:
-            scanner_without_res = Scanner(False)
-            tasks.append(executor.submit(scanner_without_res.patterns_scanner, compiler.paths["decompile_with_res"]))
+            tasks.append(executor.submit(Scanner(False).patterns_scanner, compiler.paths["decompile_with_res"]))
         
-        for future in as_completed(tasks):
-            future.result()  # Will raise an exception if the scan task failed
+        try:
+            for future in as_completed(tasks):
+                future.result()
+            return True
+        except Exception:
+            return False
 
-    if not compiler.compile():
-        cp.pr("error", "[ERROR] Unable to compile application")
-        sys.exit(1)
-    
-    if not compiler.signer():
-        cp.pr("error", "[ERROR] Unable to sign application")
-        sys.exit(1)
-    
-    if compiler.paths["sign_with_res"]:
-        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths['sign_with_res']}")
-    if compiler.paths["sign_without_res"]:
-        cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths['sign_without_res']}")
+def display_output_paths(compiler: Compiler) -> None:
+    for path_type in ["sign_with_res", "sign_without_res"]:
+        if compiler.paths[path_type]:
+            cp.pr("blue", f"[DONE] Application Out Path: {compiler.paths[path_type]}")
 
 if __name__ == "__main__":
     main()
